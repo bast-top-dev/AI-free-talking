@@ -35,28 +35,65 @@ def install_dependencies():
         # Install main dependencies
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
         
-        # Install PyAudio separately for Windows compatibility
-        print("Installing PyAudio for Windows...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "pipwin"])
-            subprocess.check_call([sys.executable, "-m", "pipwin", "install", "pyaudio"])
-        except subprocess.CalledProcessError:
-            print("Warning: PyAudio installation failed. Trying alternative method...")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "pyaudio"])
-            except subprocess.CalledProcessError:
-                print("Warning: PyAudio could not be installed automatically.")
-                print("Please install manually: pip install pipwin && pipwin install pyaudio")
+        # Install PyAudio with multiple fallback methods for Python 3.13 compatibility
+        print("Installing PyAudio...")
+        pyaudio_installed = False
         
-        print("✓ Dependencies installed successfully!")
+        # Method 1: Try direct pip install first
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pyaudio"])
+            pyaudio_installed = True
+            print("[OK] PyAudio installed via direct pip")
+        except subprocess.CalledProcessError:
+            print("Direct pip install failed, trying alternatives...")
+            
+            # Method 2: Try binary wheel only
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--only-binary=all", "pyaudio"])
+                pyaudio_installed = True
+                print("[OK] PyAudio installed via binary wheel")
+            except subprocess.CalledProcessError:
+                print("Binary wheel install failed, trying pipwin...")
+                
+                # Method 3: Try pipwin (may fail on Python 3.13)
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "pipwin"])
+                    subprocess.check_call([sys.executable, "-m", "pipwin", "install", "pyaudio"])
+                    pyaudio_installed = True
+                    print("[OK] PyAudio installed via pipwin")
+                except subprocess.CalledProcessError:
+                    print("pipwin failed (common on Python 3.13), trying compilation...")
+                    
+                    # Method 4: Try compilation from source
+                    try:
+                        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "wheel", "setuptools"])
+                        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyaudio", "--no-binary=pyaudio"])
+                        pyaudio_installed = True
+                        print("[OK] PyAudio compiled from source")
+                    except subprocess.CalledProcessError:
+                        print("Compilation failed, installing alternatives...")
+                        
+                        # Method 5: Install alternative audio libraries
+                        try:
+                            subprocess.check_call([sys.executable, "-m", "pip", "install", "sounddevice", "soundfile"])
+                            print("[OK] Installed alternative audio libraries (sounddevice, soundfile)")
+                        except subprocess.CalledProcessError:
+                            print("Warning: Could not install alternative audio libraries")
+        
+        if not pyaudio_installed:
+            print("Warning: PyAudio installation failed.")
+            print("The application may work with limited audio functionality.")
+            print("For manual installation, try: python install_pyaudio_python313.py")
+        
+        print("[OK] Dependencies installation completed!")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"✗ Failed to install dependencies: {e}")
+        print(f"[FAIL] Failed to install dependencies: {e}")
         return False
 
 def main():
     """Main launcher function."""
-    print("AI Agent - 電話営業ボット")
+    print("AI Agent - Telephone Sales Bot")
     print("=" * 40)
     
     # Add current directory to Python path
@@ -80,7 +117,7 @@ def main():
         from main import main as run_app
         run_app()
     except ImportError as e:
-        print(f"✗ Import error: {e}")
+        print(f"[FAIL] Import error: {e}")
         print("Please make sure all required packages are installed:")
         print("pip install -r requirements.txt")
         sys.exit(1)
@@ -88,7 +125,7 @@ def main():
         print("\n\nApplication stopped by user.")
         sys.exit(0)
     except Exception as e:
-        print(f"✗ Application error: {e}")
+        print(f"[FAIL] Application error: {e}")
         print("\nPlease check the error above and try again.")
         sys.exit(1)
 

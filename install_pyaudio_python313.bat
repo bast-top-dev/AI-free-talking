@@ -1,9 +1,9 @@
 @echo off
-echo AI Agent - PyAudio Fix for Windows
-echo ==================================
+echo AI Agent - PyAudio Installation for Python 3.13
+echo ================================================
 echo.
 
-echo This script will fix the PyAudio installation issue on Windows.
+echo This script will install PyAudio using alternative methods for Python 3.13.
 echo.
 
 REM Check if Python is installed
@@ -15,47 +15,68 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Installing core dependencies...
+echo Checking Python version...
+python -c "import sys; print(f'Python {sys.version}')"
+
+echo.
+echo Installing core dependencies first...
 pip install pyttsx3==2.90 SpeechRecognition>=3.14.0
 
 echo.
-echo Attempting PyAudio installation methods...
+echo Attempting PyAudio installation methods for Python 3.13...
 echo.
 
-echo Method 1: Direct pip install...
+echo Method 1: Trying direct pip install...
 pip install pyaudio
 if not errorlevel 1 (
     echo ✓ PyAudio installed successfully via pip!
     goto test_installation
 )
 
-echo Method 2: Binary wheel install...
+echo.
+echo Method 2: Trying with pre-compiled wheel...
 pip install --only-binary=all pyaudio
 if not errorlevel 1 (
     echo ✓ PyAudio installed successfully via binary wheel!
     goto test_installation
 )
 
-echo Method 3: Trying pipwin...
-pip install pipwin
-pipwin install pyaudio
+echo.
+echo Method 3: Trying with no-cache-dir flag...
+pip install --no-cache-dir pyaudio
 if not errorlevel 1 (
-    echo ✓ PyAudio installed successfully via pipwin!
+    echo ✓ PyAudio installed successfully without cache!
     goto test_installation
 )
 
-echo Method 4: Compiling from source...
-pip install --upgrade wheel setuptools
+echo.
+echo Method 4: Installing from conda-forge (if available)...
+pip install conda
+conda install -c conda-forge pyaudio
+if not errorlevel 1 (
+    echo ✓ PyAudio installed successfully via conda-forge!
+    goto test_installation
+)
+
+echo.
+echo Method 5: Manual compilation (may require Visual Studio Build Tools)...
+echo Installing build dependencies...
+pip install wheel setuptools
 pip install pyaudio --no-binary=pyaudio
 if not errorlevel 1 (
     echo ✓ PyAudio compiled and installed successfully!
     goto test_installation
 )
 
-echo Method 5: Installing alternatives...
+echo.
+echo All automatic methods failed. Trying alternative approach...
+echo Installing alternative audio libraries...
 pip install sounddevice soundfile
-echo ✓ Installed alternative audio libraries
+echo.
+echo Installing alternative speech recognition...
+pip install vosk
 
+:test_installation
 echo.
 echo Testing installation...
 python -c "import pyttsx3; print('✓ pyttsx3 OK')" 2>nul
@@ -70,5 +91,8 @@ if errorlevel 1 (
     )
 )
 
+echo.
+echo Installation complete!
+echo You can now try running: python main.py
 echo.
 pause
