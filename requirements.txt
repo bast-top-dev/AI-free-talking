@@ -1,0 +1,7 @@
+# Core dependencies for AI Agent
+pyttsx3==2.90
+SpeechRecognition==3.10.0
+pyaudio==0.2.11
+
+# Optional: For production deployment
+pyinstaller>=5.0  # For creating standalone executables
