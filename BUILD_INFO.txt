@@ -1,0 +1,24 @@
+AI Agent - Build Information
+============================
+
+Build Date: Fri 10/03/2025
+Python Version: 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]
+Platform: Windows-10-10.0.19045-SP0
+Architecture: 64bit
+
+Executable Location: dist/AI_Agent.exe
+
+Usage:
+1. Double-click AI_Agent.exe to run
+2. Or run from command line: dist/AI_Agent.exe
+
+Notes:
+- First run may be slower as it extracts dependencies
+- Antivirus software may flag the executable (false positive)
+- Make sure you have a microphone and speakers connected
+- Internet connection required for speech recognition
+
+Troubleshooting:
+- If the executable doesn't start, try running from command line
+- Check Windows Defender or antivirus exclusions
+- Ensure all audio devices are working
