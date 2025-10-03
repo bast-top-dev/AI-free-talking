@@ -1,258 +1,265 @@
-#!/usr/bin/env python3
 """
-AI Agent - Executable Builder Script
-===================================
-
-This script builds a standalone executable (.exe) file from the AI Agent project.
-It handles all the necessary configurations for PyInstaller.
+AI Agent - Advanced Build Script for Executable
 """
 
 import os
 import sys
 import subprocess
 import shutil
-import platform
 from pathlib import Path
 
-def check_pyinstaller():
-    """Check if PyInstaller is installed."""
+def run_command(command, description, check=True):
+    """Run a command and return success status."""
+    print(f"Running: {description}")
+    print(f"Command: {command}")
+    
     try:
-        import PyInstaller
-        print(f"[OK] PyInstaller {PyInstaller.__version__} is available")
-        return True
-    except ImportError:
-        print("[FAIL] PyInstaller not found")
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(f"✓ {description} - Success")
+            if result.stdout:
+                print(f"Output: {result.stdout}")
+            return True
+        else:
+            print(f"✗ {description} - Failed")
+            print(f"Error: {result.stderr}")
+            if result.stdout:
+                print(f"Output: {result.stdout}")
+            if check:
+                return False
+            return True
+            
+    except Exception as e:
+        print(f"✗ {description} - Exception: {e}")
         return False
+
+def check_requirements():
+    """Check if all requirements are met."""
+    print("Checking build requirements...")
+    
+    # Check Python version
+    python_version = sys.version_info
+    print(f"Python version: {python_version.major}.{python_version.minor}.{python_version.micro}")
+    
+    if python_version.major != 3:
+        print("✗ Python 3 is required")
+        return False
+    
+    # Check if main.py exists
+    if not os.path.exists("main.py"):
+        print("✗ main.py not found")
+        return False
+    
+    # Check if ai_agent package exists
+    if not os.path.exists("ai_agent"):
+        print("✗ ai_agent package not found")
+        return False
+    
+    print("✓ All requirements met")
+    return True
 
 def install_pyinstaller():
-    """Install PyInstaller if not available."""
-    print("Installing PyInstaller...")
+    """Install PyInstaller if not already installed."""
+    print("\nInstalling PyInstaller...")
+    
+    # Check if PyInstaller is already installed
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller>=5.0"])
-        print("[OK] PyInstaller installed successfully")
+        import PyInstaller
+        print("✓ PyInstaller already installed")
         return True
-    except subprocess.CalledProcessError:
-        print("[FAIL] Failed to install PyInstaller")
-        return False
+    except ImportError:
+        pass
+    
+    # Install PyInstaller
+    return run_command("pip install pyinstaller", "Install PyInstaller")
 
-def clean_build_dirs():
-    """Clean previous build directories."""
-    dirs_to_clean = ['build', 'dist', '__pycache__']
+def clean_build():
+    """Clean previous build artifacts."""
+    print("\nCleaning previous build artifacts...")
+    
+    dirs_to_clean = ["build", "dist", "__pycache__"]
+    files_to_clean = ["*.spec"]
+    
     for dir_name in dirs_to_clean:
         if os.path.exists(dir_name):
-            print(f"Cleaning {dir_name}...")
-            shutil.rmtree(dir_name)
+            try:
+                shutil.rmtree(dir_name)
+                print(f"✓ Cleaned {dir_name}")
+            except Exception as e:
+                print(f"⚠ Could not clean {dir_name}: {e}")
     
     # Clean .spec files
-    for spec_file in Path('.').glob('*.spec'):
-        print(f"Removing {spec_file}")
-        spec_file.unlink()
-
-def create_spec_file():
-    """Create a PyInstaller spec file with proper configuration."""
-    spec_content = '''# -*- mode: python ; coding: utf-8 -*-
-
-block_cipher = None
-
-a = Analysis(
-    ['main.py'],
-    pathex=[],
-    binaries=[],
-    datas=[
-        ('ai_agent', 'ai_agent'),
-    ],
-    hiddenimports=[
-        'pyttsx3',
-        'speech_recognition',
-        'pyaudio',
-        'sounddevice',
-        'soundfile',
-        'tkinter',
-        'tkinter.ttk',
-        'tkinter.messagebox',
-        'tkinter.filedialog',
-        'threading',
-        'queue',
-        'json',
-        'time',
-        'random',
-        'os',
-        'sys',
-        'pathlib',
-    ],
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
-)
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='AI_Agent',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon=None,
-)
-'''
-    
-    with open('AI_Agent.spec', 'w', encoding='utf-8') as f:
-        f.write(spec_content)
-    
-    print("[OK] Created AI_Agent.spec file")
+    for spec_file in Path(".").glob("*.spec"):
+        try:
+            spec_file.unlink()
+            print(f"✓ Cleaned {spec_file}")
+        except Exception as e:
+            print(f"⚠ Could not clean {spec_file}: {e}")
 
 def build_executable():
-    """Build the executable using PyInstaller."""
-    print("Building executable...")
+    """Build the executable."""
+    print("\nBuilding executable...")
     
-    try:
-        # Use the spec file for building
-        cmd = [sys.executable, "-m", "PyInstaller", "--clean", "AI_Agent.spec"]
-        subprocess.check_call(cmd)
-        print("[OK] Executable built successfully")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"[FAIL] Build failed: {e}")
-        return False
-
-def build_simple_executable():
-    """Build a simple executable without spec file."""
-    print("Building simple executable...")
-    
+    # PyInstaller command with all necessary options
     cmd = [
-        sys.executable, "-m", "PyInstaller",
-        "--onefile",
-        "--console",
-        "--name", "AI_Agent",
-        "--add-data", "ai_agent;ai_agent",
-        "--hidden-import", "pyttsx3",
-        "--hidden-import", "speech_recognition", 
-        "--hidden-import", "pyaudio",
+        "pyinstaller",
+        "--onefile",                    # Single executable file
+        "--windowed",                   # No console window
+        "--name", "AI_Agent",          # Output name
+        "--add-data", "ai_agent;ai_agent",  # Include ai_agent package
+        "--hidden-import", "pyttsx3",   # Explicitly import pyttsx3
+        "--hidden-import", "speech_recognition",
         "--hidden-import", "tkinter",
-        "--hidden-import", "tkinter.ttk",
-        "--hidden-import", "tkinter.messagebox",
-        "--hidden-import", "tkinter.filedialog",
+        "--hidden-import", "pywintypes",
+        "--hidden-import", "win32com.client",
+        "--hidden-import", "comtypes",
+        "--collect-all", "pyttsx3",     # Collect all pyttsx3 dependencies
+        "--collect-all", "speech_recognition",
+        "--clean",                      # Clean cache
         "main.py"
     ]
     
-    try:
-        subprocess.check_call(cmd)
-        print("[OK] Simple executable built successfully")
+    command = " ".join(cmd)
+    
+    print("PyInstaller command:")
+    print(command)
+    print()
+    
+    # Try the full command first
+    if run_command(command, "Build executable with full options", check=False):
         return True
-    except subprocess.CalledProcessError as e:
-        print(f"[FAIL] Simple build failed: {e}")
+    
+    print("\nFull build failed, trying simplified build...")
+    
+    # Simplified command
+    simple_cmd = [
+        "pyinstaller",
+        "--onefile",
+        "--windowed", 
+        "--name", "AI_Agent",
+        "--clean",
+        "main.py"
+    ]
+    
+    simple_command = " ".join(simple_cmd)
+    return run_command(simple_command, "Build executable with simplified options")
+
+def verify_build():
+    """Verify the build was successful."""
+    print("\nVerifying build...")
+    
+    exe_path = "dist/AI_Agent.exe"
+    
+    if not os.path.exists(exe_path):
+        print("✗ Executable not found")
         return False
+    
+    # Get file size
+    file_size = os.path.getsize(exe_path)
+    file_size_mb = file_size / (1024 * 1024)
+    
+    print(f"✓ Executable created successfully!")
+    print(f"  Location: {exe_path}")
+    print(f"  Size: {file_size_mb:.1f} MB")
+    
+    return True
 
-def test_executable():
-    """Test if the executable was created."""
-    exe_path = os.path.join("dist", "AI_Agent.exe")
-    if os.path.exists(exe_path):
-        size = os.path.getsize(exe_path)
-        size_mb = size / (1024 * 1024)
-        print(f"[OK] Executable created: {exe_path}")
-        print(f"Size: {size_mb:.1f} MB")
-        return True
-    else:
-        print("[FAIL] Executable not found")
-        return False
+def create_launcher():
+    """Create a simple launcher batch file."""
+    print("\nCreating launcher...")
+    
+    launcher_content = """@echo off
+echo Starting AI Agent...
+echo ====================
+echo.
 
-def create_build_info():
-    """Create build information file."""
-    info_content = f"""AI Agent - Build Information
-============================
+REM Check if executable exists
+if not exist "AI_Agent.exe" (
+    echo Error: AI_Agent.exe not found!
+    echo Please make sure the executable is in the same folder as this launcher.
+    pause
+    exit /b 1
+)
 
-Build Date: {subprocess.check_output(['date', '/t'], shell=True, text=True).strip()}
-Python Version: {sys.version}
-Platform: {platform.platform()}
-Architecture: {platform.architecture()[0]}
+REM Run the executable
+AI_Agent.exe
 
-Executable Location: dist/AI_Agent.exe
-
-Usage:
-1. Double-click AI_Agent.exe to run
-2. Or run from command line: dist/AI_Agent.exe
-
-Notes:
-- First run may be slower as it extracts dependencies
-- Antivirus software may flag the executable (false positive)
-- Make sure you have a microphone and speakers connected
-- Internet connection required for speech recognition
-
-Troubleshooting:
-- If the executable doesn't start, try running from command line
-- Check Windows Defender or antivirus exclusions
-- Ensure all audio devices are working
+REM Pause to see any error messages
+if errorlevel 1 (
+    echo.
+    echo Application exited with error code %errorlevel%
+    pause
+)
 """
     
-    with open('BUILD_INFO.txt', 'w', encoding='utf-8') as f:
-        f.write(info_content)
-    
-    print("[OK] Created BUILD_INFO.txt")
+    try:
+        with open("dist/Launch_AI_Agent.bat", "w") as f:
+            f.write(launcher_content)
+        print("✓ Launcher created: dist/Launch_AI_Agent.bat")
+        return True
+    except Exception as e:
+        print(f"✗ Failed to create launcher: {e}")
+        return False
 
 def main():
-    """Main build function."""
-    print("AI Agent - Executable Builder")
+    """Main build process."""
+    print("AI Agent - Advanced Build Script")
     print("=" * 40)
+    print()
     
-    # Check if we're in the right directory
-    if not os.path.exists('main.py'):
-        print("[FAIL] main.py not found. Please run this script from the project root directory.")
-        return False
-    
-    # Check/install PyInstaller
-    if not check_pyinstaller():
+    try:
+        # Step 1: Check requirements
+        if not check_requirements():
+            print("\n❌ Requirements check failed")
+            return False
+        
+        # Step 2: Install PyInstaller
         if not install_pyinstaller():
+            print("\n❌ Failed to install PyInstaller")
             return False
-    
-    # Clean previous builds
-    clean_build_dirs()
-    
-    # Try building with spec file first
-    create_spec_file()
-    if not build_executable():
-        print("Spec file build failed, trying simple build...")
-        if not build_simple_executable():
-            print("[FAIL] All build methods failed")
+        
+        # Step 3: Clean previous builds
+        clean_build()
+        
+        # Step 4: Build executable
+        if not build_executable():
+            print("\n❌ Build failed")
             return False
-    
-    # Test the executable
-    if test_executable():
-        create_build_info()
-        print("\n[OK] Build completed successfully!")
-        print("Executable location: dist/AI_Agent.exe")
-        print("See BUILD_INFO.txt for more details")
+        
+        # Step 5: Verify build
+        if not verify_build():
+            print("\n❌ Build verification failed")
+            return False
+        
+        # Step 6: Create launcher
+        create_launcher()
+        
+        print("\n" + "=" * 40)
+        print("🎉 BUILD COMPLETED SUCCESSFULLY!")
+        print("=" * 40)
+        print()
+        print("Files created:")
+        print("  📁 dist/AI_Agent.exe - Main executable")
+        print("  📁 dist/Launch_AI_Agent.bat - Windows launcher")
+        print()
+        print("Usage:")
+        print("  1. Copy the 'dist' folder to any Windows computer")
+        print("  2. Double-click 'Launch_AI_Agent.bat' or 'AI_Agent.exe'")
+        print("  3. No Python installation required on target computer!")
+        print()
+        
         return True
-    else:
-        print("[FAIL] Build verification failed")
+        
+    except KeyboardInterrupt:
+        print("\n\nBuild cancelled by user.")
+        return False
+    except Exception as e:
+        print(f"\nUnexpected error: {e}")
         return False
 
 if __name__ == "__main__":
-    try:
-        success = main()
-        sys.exit(0 if success else 1)
-    except KeyboardInterrupt:
-        print("\nBuild cancelled by user")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\nUnexpected error: {e}")
-        sys.exit(1)
+    success = main()
+    if not success:
+        print("\n❌ Build failed. Check the error messages above.")
+    input("\nPress Enter to exit...")

@@ -145,15 +145,32 @@ The bot generates contextual responses based on user input:
 ## 🏭 Production Deployment
 
 ### Standalone Executable (Windows)
+
+#### Quick Build (Recommended)
+```bash
+# Use the automated build script
+build_exe.bat
+
+# Or use the advanced Python build script
+python build_exe.py
+```
+
+#### Manual Build
 ```bash
 # Install PyInstaller
 pip install pyinstaller
 
-# Create executable
-pyinstaller --onefile --windowed --name "AI_Agent" main.py
+# Create executable with all dependencies
+pyinstaller --onefile --windowed --name "AI_Agent" --add-data "ai_agent;ai_agent" main.py
 
 # Executable will be in dist/ folder
 ```
+
+#### Build Features
+- **Single File**: All dependencies bundled into one .exe
+- **No Console**: Clean GUI-only application
+- **Portable**: No Python installation required on target computer
+- **Complete**: Includes all speech and UI components
 
 ### Docker Deployment
 ```dockerfile

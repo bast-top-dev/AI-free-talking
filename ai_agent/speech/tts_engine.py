@@ -46,6 +46,15 @@ class TTSEngine:
             self.engine.setProperty('rate', self.rate)
             self.engine.setProperty('volume', self.volume)
             
+        except ImportError as e:
+            if 'pywintypes' in str(e):
+                raise RuntimeError(
+                    "PyWinTypes module not found. This is common with Python 3.13+ on Windows.\n"
+                    "Please run: fix_pywintypes.bat or fix_pywintypes.py\n"
+                    "Or use Python 3.11 for better compatibility."
+                )
+            else:
+                raise RuntimeError(f"Failed to import required modules: {str(e)}")
         except Exception as e:
             raise RuntimeError(f"Failed to initialize TTS engine: {str(e)}")
     
