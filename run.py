@@ -32,7 +32,22 @@ def install_dependencies():
     """Install missing dependencies."""
     print("Installing required dependencies...")
     try:
+        # Install main dependencies
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        
+        # Install PyAudio separately for Windows compatibility
+        print("Installing PyAudio for Windows...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pipwin"])
+            subprocess.check_call([sys.executable, "-m", "pipwin", "install", "pyaudio"])
+        except subprocess.CalledProcessError:
+            print("Warning: PyAudio installation failed. Trying alternative method...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "pyaudio"])
+            except subprocess.CalledProcessError:
+                print("Warning: PyAudio could not be installed automatically.")
+                print("Please install manually: pip install pipwin && pipwin install pyaudio")
+        
         print("✓ Dependencies installed successfully!")
         return True
     except subprocess.CalledProcessError as e:

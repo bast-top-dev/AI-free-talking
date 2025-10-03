@@ -120,11 +120,12 @@ docker run -it --device /dev/snd ai-agent
 ## トラブルシューティング
 
 ### PyAudio インストールエラーの場合
-Windowsの場合:
+**Windows (最も一般的な問題):**
 ```bash
 pip install pipwin
 pipwin install pyaudio
 ```
+詳細なWindowsセットアップガイド: [WINDOWS_SETUP.md](WINDOWS_SETUP.md)
 
 macOSの場合:
 ```bash

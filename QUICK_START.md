@@ -39,6 +39,17 @@ python main.py
 
 ## 🚨 Troubleshooting
 
+### PyAudio Installation Error (Windows)
+This is the most common issue on Windows. Use pipwin to fix it:
+
+```bash
+pip install pipwin
+pipwin install pyaudio
+pip install pyttsx3 speech_recognition
+```
+
+**See [WINDOWS_SETUP.md](WINDOWS_SETUP.md) for detailed Windows setup guide.**
+
 ### "No module named 'pyttsx3'" Error
 ```bash
 pip install pyttsx3 speech_recognition pyaudio

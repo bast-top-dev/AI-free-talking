@@ -18,8 +18,17 @@ python -c "import pyttsx3, speech_recognition, tkinter" >nul 2>&1
 if errorlevel 1 (
     echo Installing dependencies...
     pip install -r requirements.txt
+    
+    REM Install PyAudio separately for Windows
+    echo Installing PyAudio for Windows...
+    pip install pipwin
+    pipwin install pyaudio
+    
     if errorlevel 1 (
-        echo Failed to install dependencies.
+        echo Failed to install some dependencies.
+        echo Please try manual installation:
+        echo pip install pipwin
+        echo pipwin install pyaudio
         pause
         exit /b 1
     )
